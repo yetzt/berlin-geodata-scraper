@@ -19,6 +19,8 @@ var argv = require("optimist")
 	.alias("d","debug")
 	.alias("f","full")
 	.alias("s","simple")
+	.alias("ff","full-file")
+	.alias("sf","simple-file")
 	.argv;
 
 if (!argv.d && !argv.s) {
@@ -27,11 +29,8 @@ if (!argv.d && !argv.s) {
 }
 
 /* data file */
-if (argv._.length > 0) {
-	var FILE_DATA = path.resolve(argv._[0]);
-} else {
-	var FILE_DATA = path.resolve(__dirname, "data.json.stream");
-}
+var FILE_DATA_FULL = (argv.ff) ? path.resolve(argv.ff) : path.resolve(__dirname, "full-data.json.stream");
+var FILE_DATA_SIMPLE = (argv.sf) ? path.resolve(argv.sf) : path.resolve(__dirname, "simple-data.tsv");
 
 /* get local modules */
 var soldner = require(__dirname+"/lib/soldner.js");
@@ -189,8 +188,8 @@ var main = function() {
 	var count_fetched = 0;
 
 	/* write streams */
-	var out_full = fs.createWriteStream(FILE_DATA, {'flags': 'w'});
-	var out_simple = fs.createWriteStream(FILE_DATA, {'flags': 'w'});
+	if (argv.f) var out_full = fs.createWriteStream(FILE_DATA_FULL, {'flags': 'w'});
+	if (argv.s)	var out_simple = fs.createWriteStream(FILE_DATA_SIMPLE, {'flags': 'w'});
 
 	/* monitor */
 	var monitor = setInterval(function(){
@@ -213,12 +212,24 @@ var main = function() {
 						count_fetched++;
 
 						/* write to file */
-						out.write(JSON.stringify(data)+"\n");
-						out_simple.write(JSON.stringify(data)+"\n");
+						if (argv.f) out_full.write(JSON.stringify(data)+"\n");
+						if (argv.s) out_simple.write([
+							data.strnr,
+							data.hausnr,
+							data.name,
+							data.nummer,
+							data.plz,
+							data.berzirk_name,
+							data.ortsteil_name,
+							data.soldner_x,
+							data.soldner_y,
+							data.lat,
+							data.lon
+						].join("\t")+"\n");
 
 						if (count_fetched === count_fetchable) {
 							/* done */
-							out.end();
+							out_full.end();
 							out_simple.end();
 							clearInterval(monitor);
 							console.error("[<3]".inverse.bold.magenta, "done".magenta);
