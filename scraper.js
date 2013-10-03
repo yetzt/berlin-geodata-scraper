@@ -208,7 +208,7 @@ var main = function() {
 				count_fetchable += numbers.length;
 				count_fetched++;
 				numbers.forEach(function(number){
-					fetch_details(numbers[0], function(err,data){
+					fetch_details(number, function(err,data){
 						count_fetched++;
 
 						/* write to file */
