@@ -158,9 +158,9 @@ var fetch_details = function(data, callback){
 					break;
 					case "Finanzamt":
 						var v = $(this).find("td").eq(1).text().replace(/^\s+|\s+$/g,'').split(/\s+\/\s+/);
-						v[1] = v[1].split(/,  /g);
+						if (typeof v[1] !== "undefined") v[1] = v[1].replace(/,  /g, ", ");
 						data.finanzamt_nr = v[0];
-						data.finanzamt_addr = v[1].join(", ");
+						data.finanzamt_addr = v[1];
 					break;
 					default:
 						console.error("[ ! ]".yellow.inverse.bold, "unknown key".yellow, k.cyan);
