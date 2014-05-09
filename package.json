@@ -1,14 +1,33 @@
 {
 	"private": true,
-	"name": "berlingeo-scraper",
-	"version": "0.0.1",
+	"name": "berlin-geo-scraper",
+	"description": "scrape berlin geodata",
+	"version": "0.0.2",
+	"licenses": [{
+		"type": "Public Domain",
+		"url": "http://unlicense.org/UNLICENSE"
+	}],
+	"author": "Sebastian Vollnhals <sv@datenfreunde.com>",
+	"maintainers": [{
+		"name": "Sebastian Vollnhals",
+		"email": "git@yetzt.me",
+		"web": "http://yetzt.me/"
+	}],
+	"main": "./bgs.js",
+	"bin": {
+		"bgs": "./bgs.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/yetzt/berlin-geo-scraper.git"
+	},
 	"dependencies": {
-		"scrapyard": ">= 0.0.1",
-		"colors": ">= 0.6.0",
-		"proj4": ">= 1.4.0",
-		"optimist": ">= 0.6.0"
+		"scrapyard": ">= 0.0.6",
+		"colors": ">= 0.6.2",
+		"optimist": ">= 0.6.1",
+		"proj4": ">= 2.1.2"
 	},
 	"engines": {
-		"node": ">= 0.8.15"
+		"node": ">= 0.10"
 	}
 }

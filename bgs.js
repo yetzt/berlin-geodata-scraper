@@ -23,7 +23,7 @@ var argv = require("optimist")
 	.alias("sf","simple-file")
 	.argv;
 
-if (!argv.d && !argv.s) {
+if (!argv.f && !argv.s) {
 	console.error("specify either --full or --simple".red);
 	process.exit();
 }
@@ -37,9 +37,7 @@ var soldner = require(__dirname+"/lib/soldner.js");
 
 /* initialize scrapyard */
 var scraper = new scrapyard({
-	cache: './storage', 
 	debug: argv.d,
-	timeout: 986400000,
 	retries: 5,
 	connections: 5
 });
