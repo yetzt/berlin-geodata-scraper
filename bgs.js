@@ -227,8 +227,8 @@ var main = function() {
 
 						if (count_fetched === count_fetchable) {
 							/* done */
-							out_full.end();
-							out_simple.end();
+							if (argv.f) out_full.end();
+							if (argv.s) out_simple.end();
 							clearInterval(monitor);
 							console.error("[<3]".inverse.bold.magenta, "done".magenta);
 						}

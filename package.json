@@ -2,7 +2,7 @@
 	"private": true,
 	"name": "berlin-geodata-scraper",
 	"description": "scrape berlin geodata",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"licenses": [{
 		"type": "Public Domain",
 		"url": "http://unlicense.org/UNLICENSE"
@@ -22,7 +22,7 @@
 		"url": "https://github.com/yetzt/berlin-geodata-scraper.git"
 	},
 	"dependencies": {
-		"scrapyard": ">= 0.0.6",
+		"scrapyard": ">= 0.0.7",
 		"colors": ">= 0.6.2",
 		"optimist": ">= 0.6.1",
 		"proj4": ">= 2.1.2"
