@@ -1,33 +1,25 @@
 {
-	"private": true,
-	"name": "berlin-geodata-scraper",
-	"description": "scrape berlin geodata",
-	"version": "0.0.3",
-	"licenses": [{
-		"type": "Public Domain",
-		"url": "http://unlicense.org/UNLICENSE"
-	}],
-	"author": "Sebastian Vollnhals <sv@datenfreunde.com>",
-	"maintainers": [{
-		"name": "Sebastian Vollnhals",
-		"email": "git@yetzt.me",
-		"web": "http://yetzt.me/"
-	}],
-	"main": "./bgs.js",
-	"bin": {
-		"bgs": "./bgs.js"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/yetzt/berlin-geodata-scraper.git"
-	},
-	"dependencies": {
-		"scrapyard": ">= 0.0.7",
-		"colors": ">= 0.6.2",
-		"optimist": ">= 0.6.1",
-		"proj4": ">= 2.1.2"
-	},
-	"engines": {
-		"node": ">= 0.10"
-	}
+  "private": true,
+  "name": "berlin-geodata-scraper",
+  "description": "scrapes berlin geodata",
+  "version": "0.1.0",
+  "license": "Unlicense",
+  "author": "Sebastian Vollnhals <node@yetzt.me>",
+  "main": "./bgs.js",
+  "bin": {
+    "bgs": "./bgs.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yetzt/berlin-geodata-scraper.git"
+  },
+  "dependencies": {
+    "debug": "^2.2.0",
+    "proj4": "^2.3.12",
+    "scrapyard": "^0.0.13",
+    "sv": "^0.3.9"
+  },
+  "engines": {
+    "node": ">= 0.10"
+  }
 }

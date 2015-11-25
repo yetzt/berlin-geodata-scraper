@@ -1,83 +1,88 @@
 #!/usr/bin/env node
 
-/* config */
+// config
 var BASE_URL = "http://fbinter.stadt-berlin.de/rbs/rbs-slct-str-liste.jsp";
+var NUMBER_URL = "http://fbinter.stadt-berlin.de/rbs/rbs-slct-hnr-liste.jsp";
 var DETAIL_URL = "http://fbinter.stadt-berlin.de/rbs/rbs-show-data-text.jsp";
 
-/* get node modules */
+// get node modules
 var fs = require("fs");
 var path = require("path");
 var url = require("url");
 
-/* get npm modules */
+// get npm modules
 var scrapyard = require("scrapyard");
-var colors = require("colors");
+var debug = require("debug")("bgs");
+var sv = require("sv");
 
-/* get command line options via optimist */
-var argv = require("optimist")
-	.boolean(["d","f","s"])
-	.alias("d","debug")
-	.alias("f","full")
-	.alias("s","simple")
-	.alias("ff","full-file")
-	.alias("sf","simple-file")
-	.argv;
+var out = new sv.Stringifier({peek: 1, missing: null});
+out.pipe(process.stdout);
 
-if (!argv.f && !argv.s) {
-	console.error("specify either --full or --simple".red);
-	process.exit();
-}
-
-/* data file */
-var FILE_DATA_FULL = (argv.ff) ? path.resolve(argv.ff) : path.resolve(__dirname, "full-data.json.stream");
-var FILE_DATA_SIMPLE = (argv.sf) ? path.resolve(argv.sf) : path.resolve(__dirname, "simple-data.tsv");
-
-/* get local modules */
+// get local modules
 var soldner = require(__dirname+"/lib/soldner.js");
 
-/* initialize scrapyard */
+// initialize scrapyard
 var scraper = new scrapyard({
-	debug: argv.d,
-	retries: 5,
-	connections: 5
+	retries: 3,
+	connections: 3,
+	cache: './cache', 
+	bestbefore: "12h"
 });
 
 var fetch_streets = function(callback){
-	scraper.scrape(BASE_URL, "html", function(err, $){
-		if (err) {
-			callback(err);
-		} else {
-			var result = [];
-			$('form.query tr td input[name=strnr]').each(function(idx, $r){
-				result.push($(this).attr('value'));
-			});
-			callback(null, result);
-		}
-	});
-};
-
-var fetch_numbers = function(strnr, callback){
-	scraper.scrape(BASE_URL+"?strnr="+strnr, "html", function(err, $){
-		if (err) {
-			callback(err);
-		} else {
-			var str_name = $("input[name=strname]").val();
-			var result = [];
-			$('form tr td input[name=hausnr]').each(function(idx, $r){
-				result.push({
-					strnr: strnr,
-					hausnr: $(this).attr('value'),
-					name: str_name,
-					nummer: $(this).parent().parent().find("td").eq(1).text()
+	var _fetched = 0;
+	var _result = [];
+	["01","02","03","04","05","06","07","08","09","10","11","12"].forEach(function(beznr){
+		scraper.scrape({
+			url: BASE_URL+"?beznr="+beznr+"&go=go&stop=window",
+			type: "html",
+			encoding: "utf8"
+		}, function(err, $){
+			_fetched++;
+			if (err) return callback(err);
+			debug("fetched streets for bezirk %d", beznr);
+			$('form.query tr').each(function(){
+				// filter additional rows for streets in two districts
+				if ($('td', this).length === 1) return;
+				_result.push({
+					number: $("td input[name=strnr]", this).attr('value'),
+					name: $("td font", this).eq(0).text().replace(/^\s+|\s+$/g,'').replace(/\s+/g,' ')
 				});
 			});
-			callback(null, result);
-		}
+			if (_fetched === 12) callback(null, _result);
+		});
+	});
+
+};
+
+var fetch_numbers = function(street, callback){
+	// debug("fetching numbers for %s", street.name);
+	scraper.scrape({
+		url: NUMBER_URL+"?strnr="+street.number+"&strname="+street.name+"&go=go&stop=window",
+		type: "html",
+		encoding: "utf8"
+	}, function(err, $){
+		if (err) return callback(err);
+		var result = [];
+		$('form tr td input[name=hausnr]').each(function(idx, $r){
+			result.push({
+				strnr: street.number,
+				hausnr: $(this).attr('value'),
+				name: street.name,
+				nummer: $(this).parent().parent().find("td").eq(1).text()
+			});
+		});
+		callback(null, result);
 	});
 };
 
 var fetch_details = function(data, callback){
-	scraper.scrape(DETAIL_URL+"?strnr="+data.strnr+"&hausnr="+data.hausnr, "html", function(err, $){
+	// debug("fetching details for %s %s", data.name, data.hausnr);
+	scraper.scrape({
+		url: DETAIL_URL+"?strnr="+data.strnr+"&strname="+data.name+"&hausnr="+data.hausnr+"&go=go&stop=window", 
+		type: "html",
+		encoding: "utf8"
+	}, function(err, $){
 		if (err) {
 			callback(err);
 		} else {
@@ -123,6 +128,14 @@ var fetch_details = function(data, callback){
 						data.soldner_x = parseInt(v[0],10);
 						data.soldner_y = parseInt(v[1],10);
 					break;
+					case "ETRS89-Koordinaten":
+					var v = [
+						$(this).find("td").eq(1).find("tr").eq(0).find("td").eq(1).text(),
+						$(this).find("td").eq(1).find("tr").eq(1).find("td").eq(1).text(),
+					];
+						data.etrs89_x = parseInt(v[0],10);
+						data.etrs89_y = parseInt(v[1],10);
+					break;
 					case "stat.Geb./Block":
 						var v = $(this).find("td").eq(1).text().replace(/^\s+|\s+$/g,'').split(/\s+\/\s+/g);
 						data.stat_gebiet = v[0];
@@ -161,7 +174,7 @@ var fetch_details = function(data, callback){
 						data.finanzamt_addr = v[1];
 					break;
 					default:
-						console.error("[ ! ]".yellow.inverse.bold, "unknown key".yellow, k.cyan);
+						debug("unknown key %s", k);
 					break;
 				}
 			});
@@ -174,32 +187,26 @@ var fetch_details = function(data, callback){
 				data.lon = null;
 				data.lat = null;
 			}
+
 			callback(null,data);
 		}
 	});
 };
 
-var main = function() {
+(function() {
 	
-	/* fetch counters */
+	// fetch counters
 	var count_fetchable = 0;
 	var count_fetched = 0;
 
-	/* write streams */
-	if (argv.f) var out_full = fs.createWriteStream(FILE_DATA_FULL, {'flags': 'w'});
-	if (argv.s)	var out_simple = fs.createWriteStream(FILE_DATA_SIMPLE, {'flags': 'w'});
-
-	/* monitor */
+	// monitor
 	var monitor = setInterval(function(){
-		process.stderr.write([
-			"[status]".inverse.bold.green,
-			(count_fetched+"/"+count_fetchable).magenta,
-			"\r"
-		].join(" "));
-	},5000);
+		if (count_fetchable === 0) return("nothing to fetch yet");
+		debug("fetched %d/%d", count_fetched, count_fetchable);
+	},10000);
 
 	fetch_streets(function(err,streets){
-		console.error("[info]".inverse.bold.green, "loaded streets".green);
+		debug("loaded %d streets", streets.length);
 		count_fetchable += streets.length;
 		streets.forEach(function(street){
 			fetch_numbers(street, function(err,numbers){
@@ -208,35 +215,19 @@ var main = function() {
 				numbers.forEach(function(number){
 					fetch_details(number, function(err,data){
 						count_fetched++;
-
-						/* write to file */
-						if (argv.f) out_full.write(JSON.stringify(data)+"\n");
-						if (argv.s) out_simple.write([
-							data.strnr,
-							data.hausnr,
-							data.name,
-							data.nummer,
-							data.plz,
-							data.berzirk_name,
-							data.ortsteil_name,
-							data.soldner_x,
-							data.soldner_y,
-							data.lat,
-							data.lon
-						].join("\t")+"\n");
+						
+						if (err) debug("error: %s", err);
+						if (!err) out.write(data);
 
 						if (count_fetched === count_fetchable) {
-							/* done */
-							if (argv.f) out_full.end();
-							if (argv.s) out_simple.end();
+							// done
+							out.end();
 							clearInterval(monitor);
-							console.error("[<3]".inverse.bold.magenta, "done".magenta);
+							debug("done");
 						}
 					});
 				})
 			});
 		});
 	});
-}
-
-main();
+})();
