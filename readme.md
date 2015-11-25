@@ -1,6 +1,6 @@
 # Berlin Geodata Scraper
 
-Aggregates Gerodata from [Berlin FIS Broker](http://fbinter.stadt-berlin.de/rbs/) and converts them to TSV.
+Aggregates Geodata from [Berlin FIS Broker](http://fbinter.stadt-berlin.de/rbs/) and converts them to TSV.
 
 ## Install
 
