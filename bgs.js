@@ -13,10 +13,6 @@ var url = require("url");
 // get npm modules
 var scrapyard = require("scrapyard");
 var debug = require("debug")("bgs");
-var sv = require("sv");
-
-var out = new sv.Stringifier({peek: 2, missing: null, delimiter: "\t", quotechar: true});
-out.pipe(process.stdout);
 
 // get local modules
 var soldner = require(__dirname+"/lib/soldner.js");
@@ -215,16 +211,16 @@ var fetch_details = function(data, callback){
 				count_fetched++;
 				numbers.forEach(function(number){
 					fetch_details(number, function(err,data){
+						if (count_fetched === 0) process.stdout.write(["strnr","hausnr","name","nummer","addresse","plz","berzirk_name","berzirk_nr","ortsteil_name","ortsteil_nr","strasse_nr","strasse_abschnitt_nr","karten","soldner_x","soldner_y","etrs89_x","etrs89_y","stat_gebiet","stat_block","einschulungsbezirk","verkehrsflaeche","verkehrsteilflaeche","mittelbereich","prognoseraum_name","prognoseraum_nr","bezirksregion_name","bezirksregion_nr","planungsraum_name","planungsraum_nr","finanzamt_nr","finanzamt_addr","lon","lat","url"].join("\t")+"\n");
+
 						count_fetched++;
-						
+
 						if (err) debug("error: %s", err);
 						if (typeof data !== "object") debug("error: data is %s", (typeof data));
 						
-						if (!err && typeof data === "object") out.write(data);
+						if (!err && typeof data === "object") process.stdout.write([data.strnr,data.hausnr,data.name,data.nummer,data.addresse,data.plz,data.berzirk_name,data.berzirk_nr,data.ortsteil_name,data.ortsteil_nr,data.strasse_nr,data.strasse_abschnitt_nr,data.karten,data.soldner_x,data.soldner_y,data.etrs89_x,data.etrs89_y,data.stat_gebiet,data.stat_block,data.einschulungsbezirk,data.verkehrsflaeche,data.verkehrsteilflaeche,data.mittelbereich,data.prognoseraum_name,data.prognoseraum_nr,data.bezirksregion_name,data.bezirksregion_nr,data.planungsraum_name,data.planungsraum_nr,data.finanzamt_nr,data.finanzamt_addr,data.lon,data.lat,data.url].join("\t")+"\n");
 
 						if (count_fetched === count_fetchable) {
-							// done
-							out.end();
 							clearInterval(monitor);
 							debug("done");
 						}
