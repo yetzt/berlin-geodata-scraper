@@ -78,8 +78,9 @@ var fetch_numbers = function(street, callback){
 
 var fetch_details = function(data, callback){
 	// debug("fetching details for %s %s", data.name, data.hausnr);
+	data.url = DETAIL_URL+"?strnr="+data.strnr+"&strname="+data.name+"&hausnr="+data.hausnr+"&go=go&stop=window";
 	scraper.scrape({
-		url: DETAIL_URL+"?strnr="+data.strnr+"&strname="+data.name+"&hausnr="+data.hausnr+"&go=go&stop=window", 
+		url: data.url, 
 		type: "html",
 		encoding: "utf8"
 	}, function(err, $){
