@@ -15,7 +15,7 @@ var scrapyard = require("scrapyard");
 var debug = require("debug")("bgs");
 var sv = require("sv");
 
-var out = new sv.Stringifier({peek: 1, missing: null});
+var out = new sv.Stringifier({peek: 2, missing: null, delimiter: "\t", quotechar: true});
 out.pipe(process.stdout);
 
 // get local modules
@@ -26,7 +26,7 @@ var scraper = new scrapyard({
 	retries: 3,
 	connections: 3,
 	cache: './cache', 
-	bestbefore: "12h"
+	bestbefore: "24h"
 });
 
 var fetch_streets = function(callback){
@@ -217,7 +217,9 @@ var fetch_details = function(data, callback){
 						count_fetched++;
 						
 						if (err) debug("error: %s", err);
-						if (!err) out.write(data);
+						if (typeof data !== "object") debug("error: data is %s", (typeof data));
+						
+						if (!err && typeof data === "object") out.write(data);
 
 						if (count_fetched === count_fetchable) {
 							// done
